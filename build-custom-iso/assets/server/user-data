@@ -1,0 +1,21 @@
+#cloud-config
+autoinstall:
+  version: 1
+  refresh-installer:
+    update: true
+  storage:
+    swap:
+      size: 0
+    layout:
+      name: lvm
+  identity:
+    hostname: custom-install
+    password: "$6$rag/SpL.64niMQyB$iv0aO5FZbzDmUwNck.gsZyTLueJZFjfnzQXvajBYVikh0m2t9xwN4cBKN4iFmYHkyluH9No2aRDPNejjGY9/s." # "password" for dev purpose
+    username: ubuntu
+  ssh:
+    allow-pw: true
+    install-server: true
+  updates: security
+  user-data:
+    package_update: true
+    package_upgrade: true
