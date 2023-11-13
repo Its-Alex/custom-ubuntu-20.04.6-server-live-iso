@@ -28,9 +28,6 @@ $ vagrant ssh
 
 Two folders exists:
 
-1. `/vagrant`
-1. `/workdir`
-
 1. `/vagrant` folder
 
 This folder is synced with [./ of the host](./). And is used to transfer files
