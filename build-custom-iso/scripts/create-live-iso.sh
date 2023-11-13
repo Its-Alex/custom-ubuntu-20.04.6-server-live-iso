@@ -13,7 +13,7 @@ cp assets/grub.cfg ./autoinstall-ISO/source-files/boot/grub/grub.cfg
 cp -r assets/server ./autoinstall-ISO/source-files/
 
 # Extract filesystem.squashfs
-unsquashfs -ignore-errors autoinstall-ISO/source-files/casper/filesystem.squashfs
+unsquashfs autoinstall-ISO/source-files/casper/filesystem.squashfs
 mv squashfs-root autoinstall-ISO/extracted-filesystem
 
 # Prepare chroot into filesystem.squashfs
@@ -29,9 +29,9 @@ mount -t sysfs none /sys
 mount -t devpts none /dev/pts
 
 # Execute commands in chroot
-# apt update && apt upgrade -y
-# apt install -y linux-headers-5.15.0-43-generic linux-image-5.15.0-43-generic
-# apt-mark hold linux-generic linux-image-generic linux-headers-generic
+apt update
+apt install -y linux-headers-5.15.0-87-generic linux-image-5.15.0-87-generic
+apt-mark hold linux-generic linux-image-generic linux-headers-generic
 touch /custom-file
 
 # Cleanup before existing chroot
@@ -52,27 +52,6 @@ EOT
 # umount from chroot
 umount autoinstall-ISO/extracted-filesystem/run
 umount autoinstall-ISO/extracted-filesystem/dev
-
-# # Get updated kernel from chroot to liveiso
-# rm autoinstall-ISO/source-files/casper/vmlinuz
-# cp -L autoinstall-ISO/extracted-filesystem/boot/vmlinuz autoinstall-ISO/source-files/casper/vmlinuz
-# chmod 644 autoinstall-ISO/source-files/casper/vmlinuz
-
-# # Get updated initrd from chroot to liveiso
-# mkdir autoinstall-ISO/initrdmount
-# unmkinitramfs -v autoinstall-ISO/source-files/casper/initrd autoinstall-ISO/initrdmount
-
-# cp -R autoinstall-ISO/initrdmount/main/conf autoinstall-ISO/conf
-# mv autoinstall-ISO/conf autoinstall-ISO/initrdconf
-# cp -R autoinstall-ISO/initrdmount/main/scripts autoinstall-ISO/initrdconf/scripts
-
-# mkinitramfs -d autoinstall-ISO/initrdconf -o autoinstall-ISO/ninitrd
-# rm autoinstall-ISO/source-files/casper/initrd
-# mv autoinstall-ISO/ninitrd autoinstall-ISO/source-files/casper/initrd
-
-# # Clean /boot of chroot
-# rm autoinstall-ISO/extracted-filesystem/boot/initrd.img-*
-# rm autoinstall-ISO/extracted-filesystem/boot/vmlinuz-*
 
 # Replace squashfs of liveiso
 rm autoinstall-ISO/source-files/casper/filesystem.squashfs

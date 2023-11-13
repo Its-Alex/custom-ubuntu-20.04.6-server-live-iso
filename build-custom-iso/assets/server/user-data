@@ -2,7 +2,7 @@
 autoinstall:
   version: 1
   refresh-installer:
-    update: true
+    update: false
   storage:
     swap:
       size: 0
@@ -17,5 +17,5 @@ autoinstall:
     install-server: true
   updates: security
   user-data:
-    package_update: true
-    package_upgrade: true
+    package_update: false
+    package_upgrade: false
