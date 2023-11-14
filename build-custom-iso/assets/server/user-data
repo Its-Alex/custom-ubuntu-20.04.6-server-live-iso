@@ -2,7 +2,7 @@
 autoinstall:
   version: 1
   refresh-installer:
-    update: false
+    update: no
   storage:
     swap:
       size: 0
