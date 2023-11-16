@@ -7,13 +7,13 @@ Vagrant.configure("2") do |config|
 
   config.ssh.insert_key = false
   config.ssh.username = "ubuntu"
-
+  config.ssh.private_key_path = Dir.pwd + "/ssh-key/id"
 
   config.vm.provider "virtualbox" do |vb|
     vb.gui = true
 
-    vb.cpus = "4"
-    vb.memory = "2048"
+    vb.cpus = "8"
+    vb.memory = "4096"
 
     # Enable EFI boot
     vb.customize ["modifyvm", :id, "--firmware", "efi"]
