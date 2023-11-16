@@ -35,14 +35,14 @@ apt-mark hold linux-generic linux-image-generic linux-headers-generic
 touch /custom-file
 
 # Cleanup before existing chroot
-# apt-get autoremove
-# apt clean
-# apt-get clean
-# rm -rf /tmp/* ~/.bash_history
+apt-get autoremove
+apt clean
+apt-get clean
+rm -rf /tmp/* ~/.bash_history
 
-# rm /var/lib/dbus/machine-id
-# rm /sbin/initctl
-# dpkg-divert --rename --remove /sbin/initctl
+rm /var/lib/dbus/machine-id
+rm /sbin/initctl
+dpkg-divert --rename --remove /sbin/initctl
 
 umount /proc
 umount /sys
