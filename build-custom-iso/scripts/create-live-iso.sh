@@ -4,16 +4,32 @@ set -e
 cd "$(dirname "$0")/../"
 
 rm -rf autoinstall-ISO/* squashfs-root
-mkdir -p ./autoinstall-ISO/source-files
+mkdir -p ./autoinstall-ISO/source-disk
 
-7z -y x ./ubuntu-*.iso -oautoinstall-ISO/source-files
+# Mount ISO to get files
+mount --options loop,uid="${UID}",gid="$(id -g $UID)" "./ubuntu-20.04.6-live-server-amd64.iso" "${PWD}/autoinstall-ISO/source-disk"
+rsync --info=progress2 "${PWD}/autoinstall-ISO/source-disk/" "${PWD}/autoinstall-ISO/source-files" \
+    --delete \
+    --recursive \
+    --links \
+    --chmod=u+rwX,g=rX,o=rX \
+    --exclude="md5sum.txt" \
+    --exclude="MD5SUMS" \
+    --exclude=".disk/release_notes_url" \
+    --exclude="/casper/filesystem.manifest" \
+    --exclude="/casper/filesystem.size" \
+    --exclude="/casper/filesystem.squashfs" \
+    --exclude="/casper/filesystem.squashfs.gpg"
 
-mv  './autoinstall-ISO/source-files/[BOOT]' ./autoinstall-ISO/BOOT
+# Extract partition from ISO
+dd if="${PWD}/ubuntu-20.04.6-live-server-amd64.iso" bs="2048" skip="0" count="16" of="${PWD}/autoinstall-ISO/partition-1.img" status=progress
+
+# Update grub and cloudinit
 cp assets/grub.cfg ./autoinstall-ISO/source-files/boot/grub/grub.cfg
 cp -r assets/server ./autoinstall-ISO/source-files/
 
 # Extract filesystem.squashfs
-unsquashfs autoinstall-ISO/source-files/casper/filesystem.squashfs
+unsquashfs autoinstall-ISO/source-disk/casper/filesystem.squashfs
 mv squashfs-root autoinstall-ISO/extracted-filesystem
 
 # Prepare chroot into filesystem.squashfs
@@ -54,9 +70,6 @@ umount autoinstall-ISO/extracted-filesystem/run
 umount autoinstall-ISO/extracted-filesystem/dev
 
 # Replace squashfs of liveiso
-rm autoinstall-ISO/source-files/casper/filesystem.squashfs
-rm autoinstall-ISO/source-files/casper/filesystem.squashfs.gpg
-chmod +w autoinstall-ISO/source-files/casper/filesystem.manifest
 chroot autoinstall-ISO/extracted-filesystem dpkg-query -W --showformat='${Package} ${Version}\n' > autoinstall-ISO/source-files/casper/filesystem.manifest
 mksquashfs autoinstall-ISO/extracted-filesystem autoinstall-ISO/source-files/casper/filesystem.squashfs \
     -noappend \
@@ -85,19 +98,31 @@ gpg --local-user 87E14F2F84A1F80728631F144350DE5909853EE0 --output autoinstall-I
 # To get information from base ISO use "xorriso -indev ubuntu-20.04.6-live-server-amd64.iso -report_el_torito as_mkisofs"
 (
     cd ./autoinstall-ISO/source-files
-    xorriso -as mkisofs -r \
+    xorriso -as mkisofs \
+        -r -J -joliet-long -l -iso-level 3 \
         -V 'Ubuntu-Server 20.04.6 LTS amd64' \
-        -o ../../custom-ubuntu-20.04.6-live-server-amd64.iso \
+        -isohybrid-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt,zero_apm:'../partition-1.img' \
+        -partition_cyl_align on \
         -partition_offset 0 \
+        -partition_hd_cyl 89 \
+        -partition_sec_hd 32 \
         --mbr-force-bootable \
-        -append_partition 2 28732ac11ff8d211ba4b00a0c93ec93b ../BOOT/2-Boot-NoEmul.img \
-        -appended_part_as_gpt \
-        -iso_mbr_part_type a2a0d0ebe5b9334487c068b6b72699c7 \
+        -apm-block-size 2048 \
+        -iso_mbr_part_type 0x00 \
         -c '/isolinux/boot.cat' \
         -b '/isolinux/isolinux.bin' \
-        -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info \
-        -eltorito-alt-boot \
-        -e '--interval:appended_partition_2:::' \
         -no-emul-boot \
+        -boot-load-size 4 \
+        -boot-info-table \
+        -eltorito-alt-boot \
+        -e '/boot/grub/efi.img' \
+        -no-emul-boot \
+        -boot-load-size 8128 \
+        -isohybrid-gpt-basdat \
+        -isohybrid-apm-hfsplus \
+        -o ../../custom-ubuntu-20.04.6-live-server-amd64.iso \
         .
 )
+
+# Umount ISO
+umount "${PWD}/autoinstall-ISO/source-disk"
