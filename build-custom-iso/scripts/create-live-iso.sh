@@ -40,9 +40,9 @@ apt clean
 apt-get clean
 rm -rf /tmp/* ~/.bash_history
 
-rm /var/lib/dbus/machine-id
-rm /sbin/initctl
-dpkg-divert --rename --remove /sbin/initctl
+rm /var/lib/dbus/machine-id || true
+rm /sbin/initctl || true
+dpkg-divert --rename --remove /sbin/initctl || true
 
 umount /proc
 umount /sys
