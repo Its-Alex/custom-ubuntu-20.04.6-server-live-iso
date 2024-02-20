@@ -58,7 +58,25 @@ rm autoinstall-ISO/source-files/casper/filesystem.squashfs
 rm autoinstall-ISO/source-files/casper/filesystem.squashfs.gpg
 chmod +w autoinstall-ISO/source-files/casper/filesystem.manifest
 chroot autoinstall-ISO/extracted-filesystem dpkg-query -W --showformat='${Package} ${Version}\n' > autoinstall-ISO/source-files/casper/filesystem.manifest
-mksquashfs autoinstall-ISO/extracted-filesystem autoinstall-ISO/source-files/casper/filesystem.squashfs -comp xz
+mksquashfs autoinstall-ISO/extracted-filesystem autoinstall-ISO/source-files/casper/filesystem.squashfs \
+    -noappend \
+    -comp xz \
+    -wildcards \
+    -e "proc/*" \
+    -e "proc/.*" \
+    -e "run/*" \
+    -e "run/.*" \
+    -e "tmp/*" \
+    -e "tmp/.*" \
+    -e "var/crash/*" \
+    -e "var/crash/.*" \
+    -e "swapfile" \
+    -e "root/.bash_history" \
+    -e "root/.cache" \
+    -e "root/.wget-hsts" \
+    -e "home/*/.bash_history" \
+    -e "home/*/.cache" \
+    -e "home/*/.wget-hsts"
 printf "%s" "$(du -sx --block-size=1 autoinstall-ISO/extracted-filesystem | cut -f1)" > autoinstall-ISO/source-files/casper/filesystem.size
 # Sign new squashfs
 gpg --import assets/private.pgp
