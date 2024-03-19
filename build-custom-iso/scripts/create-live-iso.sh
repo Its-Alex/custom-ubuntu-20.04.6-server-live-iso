@@ -21,8 +21,6 @@ rsync --info=progress2 "${PWD}/autoinstall-ISO/source-disk/" "${PWD}/autoinstall
     --exclude="/casper/filesystem.squashfs" \
     --exclude="/casper/filesystem.squashfs.gpg"
 
-# Extract partition from ISO
-dd if="${PWD}/ubuntu-20.04.6-live-server-amd64.iso" bs="2048" skip="0" count="16" of="${PWD}/autoinstall-ISO/partition-1.img" status=progress
 
 # Update grub and cloudinit
 cp assets/grub.cfg ./autoinstall-ISO/source-files/boot/grub/grub.cfg
@@ -95,13 +93,16 @@ printf "%s" "$(du -sx --block-size=1 autoinstall-ISO/extracted-filesystem | cut 
 gpg --import assets/private.pgp
 gpg --local-user 87E14F2F84A1F80728631F144350DE5909853EE0 --output autoinstall-ISO/source-files/casper/filesystem.squashfs.gpg --detach-sign autoinstall-ISO/source-files/casper/filesystem.squashfs
 
+# Umount ISO
+umount "${PWD}/autoinstall-ISO/source-disk"
+
 # To get information from base ISO use "xorriso -indev ubuntu-20.04.6-live-server-amd64.iso -report_el_torito as_mkisofs"
 (
     cd ./autoinstall-ISO/source-files
     xorriso -as mkisofs \
         -r -J -joliet-long -l -iso-level 3 \
         -V 'Ubuntu-Server 20.04.6 LTS amd64' \
-        -isohybrid-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt,zero_apm:'../partition-1.img' \
+        -isohybrid-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt,zero_apm:'../../ubuntu-20.04.6-live-server-amd64.iso' \
         -partition_cyl_align on \
         -partition_offset 0 \
         -partition_hd_cyl 89 \
@@ -123,6 +124,3 @@ gpg --local-user 87E14F2F84A1F80728631F144350DE5909853EE0 --output autoinstall-I
         -o ../../custom-ubuntu-20.04.6-live-server-amd64.iso \
         .
 )
-
-# Umount ISO
-umount "${PWD}/autoinstall-ISO/source-disk"
